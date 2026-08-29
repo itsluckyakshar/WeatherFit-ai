@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>WeatherFit — Hyperlocal Outfit Suggester</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body data-theme="yellow">
+
+  <!-- NAVBAR -->
+  <header class="navbar">
+    <div class="container navbar-inner">
+      <div class="brand">🌤️ WeatherFit</div>
+      <div class="live-pill">• Live</div>
+    </div>
+  </header>
+
+  <!-- QUOTE BANNER -->
+  <div class="quote-banner">
+    <span>✨</span>
+    <span>There's no such thing as bad weather, only bad outfits.</span>
+  </div>
+
+  <!-- HERO SECTION -->
+  <main class="container">
+    <section class="hero">
+      <h1 class="hero-heading">What should I wear today?</h1>
+      <p class="hero-subtitle">
+        WeatherFit checks the current weather where you are and suggests a simple outfit for the day.
+        
+      </p>
+      
+      <div class="hero-actions">
+        <button id="useLocationBtn" class="btn-primary">📍 Use my location</button>
+        <span class="privacy-note">We only use your location to fetch weather data. Nothing is saved.</span>
+      </div>
+
+      <!-- City Search Fallback -->
+      <form id="citySearchForm" class="city-search">
+        <input type="text" id="cityInput" placeholder="Enter city name..." required>
+        <button type="submit" class="btn-secondary">Search</button>
+      </form>
+
+      <div id="statusBanner" class="status-banner"></div>
+
+      <!-- Demo Mode Controls -->
+      <div class="demo-toggle-row">
+        <button id="demoToggleBtn" class="btn-link">Try demo mode instead</button>
+        <div id="demoPanel" class="demo-panel">
+          <div class="demo-chip" data-city="Phagwara">Phagwara</div>
+          <div class="demo-chip" data-city="London">London</div>
+          <div class="demo-chip" data-city="Tokyo">Tokyo</div>
+          <div class="demo-chip" data-city="Reykjavik">Reykjavik</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- LOADING INDICATOR -->
+    <div id="loadingBox" class="loading-box">
+      <div class="loading-spinner"></div>
+      <p id="loadingCaption">Fetching weather details...</p>
+    </div>
+
+    <!-- MAIN WEATHER & OUTFIT DISPLAY -->
+    <div id="appContent" class="app-content">
+      <div class="layout-grid">
+
+      <!-- Current Weather Card -->
+      <section class="card weather-card grid-span-full">
+        <div class="weather-card-head">
+          <span class="card-label">Current weather in</span>
+          <div id="cityName" class="city-name">Loading...</div>
+        </div>
+
+        <div class="weather-main">
+          <div id="weatherIconBig" class="weather-icon-big">☀️</div>
+          <div>
+            <div id="tempBig" class="temp-big">--°</div>
+            <div id="conditionLabel" class="condition-label">Loading...</div>
+          </div>
+        </div>
+
+        <!-- Weather Stat Tiles (With Hover Darkness & Icons) -->
+        <div class="weather-stats">
+          <div class="stat-tile">
+            <div class="stat-icon">💧</div>
+            <div class="stat-label">Humidity</div>
+            <div id="statHumidity" class="stat-value">--%</div>
+          </div>
+          <div class="stat-tile">
+            <div class="stat-icon">💨</div>
+            <div class="stat-label">Wind</div>
+            <div id="statWind" class="stat-value">-- km/h</div>
+          </div>
+          <div class="stat-tile">
+            <div class="stat-icon">☔</div>
+            <div class="stat-label">Chance of Rain</div>
+            <div id="statRain" class="stat-value">--%</div>
+          </div>
+        </div>
+
+        <div class="refresh-row">
+          <span id="updatedLabel" class="card-label">Updated just now</span>
+          <button id="refreshBtn" class="refresh-btn">🔄 Refresh</button>
+        </div>
+      </section>
+
+      <!-- Hourly Forecast Strip -->
+      <section class="card grid-span-full forecast-card">
+        <div class="forecast-head">
+          <div>
+            <h2 class="section-title">🌈 Next Few Hours</h2>
+            <p class="forecast-subtitle">Hour-by-hour, so nothing sneaks up on you.</p>
+          </div>
+          <div id="peakRainRibbon" class="peak-rain-ribbon">☀️ Smooth sailing ahead</div>
+        </div>
+        <div id="forecastStrip" class="forecast-strip"></div>
+      </section>
+
+      <!-- Suggested Outfit Grid -->
+      <section class="card outfit-section">
+        <h2 class="section-title">Suggested Outfit</h2>
+        <div id="outfitGrid" class="outfit-grid"></div>
+        <div id="outfitMascot" class="outfit-mascot" title="Tap for a style tip">🧢</div>
+        <div id="mascotTip" class="mascot-tip"></div>
+      </section>
+
+      <!-- Conversational Rain Check Card -->
+      <section class="card rain-check">
+        <div id="rainCheckIcon" class="rain-check-icon">☂️</div>
+        <div class="rain-check-body">
+          <div id="rainCheckTitle" class="rain-check-title">Rain Status</div>
+          <div id="rainCheckDetail" class="rain-check-detail">Checking precipitation...</div>
+        </div>
+        <div id="rainCheckPercent" class="rain-check-percent">0%</div>
+      </section>
+
+      <!-- Weather Briefing Summary -->
+      <section class="card grid-span-full">
+        <h2 class="section-title">Summary</h2>
+        <p id="briefingText" class="briefing-text">Generating briefing...</p>
+      </section>
+
+      </div>
+    </div>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container">WeatherFit © 2026 • Hyperlocal Outfit Suggester</div>
+  </footer>
+
+  <!-- FLOATING PASTEL THEME WIDGET -->
+  <div class="floating-theme-widget">
+    <span class="theme-trigger-btn">🎨 Theme</span>
+    <div class="theme-menu">
+      <div class="theme-dot dot-purple" data-color="purple" title="Purple"></div>
+      <div class="theme-dot dot-pink" data-color="pink" title="Pink"></div>
+      <div class="theme-dot dot-mint" data-color="mint" title="Mint"></div>
+      <div class="theme-dot dot-yellow active" data-color="yellow" title="Yellow"></div>
+    </div>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
