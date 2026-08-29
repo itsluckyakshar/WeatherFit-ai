@@ -270,6 +270,8 @@ const els = {
   forecastStrip: document.getElementById("forecastStrip"),
   peakRainRibbon: document.getElementById("peakRainRibbon"),
   outfitGrid: document.getElementById("outfitGrid"),
+  whyOutfitBtn: document.getElementById("whyOutfitBtn"),
+aiExplanation: document.getElementById("aiExplanation"),
   outfitMascot: document.getElementById("outfitMascot"),
   mascotTip: document.getElementById("mascotTip"),
   rainCheckIcon: document.getElementById("rainCheckIcon"),
@@ -314,8 +316,12 @@ async function handleCitySearch(e) {
   } catch (err) { showStatus((err && err.message) || "City not found."); hideLoading(); }
 }
 
+let latestWeather = null;
+let latestRecommendation = null;
 function renderWeather(weather) {
   const rec = buildRecommendation(weather);
+  latestWeather = weather;
+latestRecommendation = rec;
   const place = weather.place || { name: "Your location", region: "" };
   els.cityName.textContent = place.region ? `${place.name}, ${place.region}` : place.name;
   els.weatherIconBig.textContent = weather.current.weather.icon;
@@ -364,6 +370,66 @@ function renderWeather(weather) {
   els.briefingText.textContent = rec.briefing;
   els.updatedLabel.textContent = "Updated just now";
 }
+async function handleWhyOutfit() {
+  if (!latestWeather || !latestRecommendation) {
+    els.aiExplanation.textContent = "Please load the weather first.";
+    els.aiExplanation.classList.add("show");
+    return;
+  }
+
+  els.whyOutfitBtn.disabled = true;
+  els.whyOutfitBtn.textContent = "🤖 Thinking...";
+
+  els.aiExplanation.classList.remove("show");
+  els.aiExplanation.textContent = "";
+
+  try {
+    const response = await fetch("/api/explain-outfit", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        weather: {
+          temperature: latestWeather.current.temperature,
+          feelsLike: latestWeather.current.feelsLike,
+          humidity: latestWeather.current.humidity,
+          windSpeed: latestWeather.current.windSpeed,
+          rainProbability: latestRecommendation.rain.probability,
+          condition: latestWeather.current.weather.label,
+          uv: latestWeather.today.uvMax
+        },
+
+        outfit: {
+          top: latestRecommendation.top.name,
+          bottom: latestRecommendation.bottom.name,
+          extra: latestRecommendation.extra.name
+        }
+      })
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error(data.error || "AI request failed");
+    }
+
+    els.aiExplanation.textContent = data.explanation;
+    els.aiExplanation.classList.add("show");
+
+  } catch (error) {
+    console.error("WeatherFit AI error:", error);
+
+    els.aiExplanation.textContent =
+      "Sorry, I couldn't generate the explanation right now. Please try again.";
+
+    els.aiExplanation.classList.add("show");
+
+  } finally {
+    els.whyOutfitBtn.disabled = false;
+    els.whyOutfitBtn.textContent = "✨ Why this outfit?";
+  }
+}
 
 // FLOATING THEME SWITCHER INTERACTION
 document.querySelectorAll(".theme-dot").forEach((dot) => {
@@ -400,3 +466,4 @@ els.demoToggleBtn.addEventListener("click", () => els.demoPanel.classList.toggle
 document.querySelectorAll(".demo-chip").forEach((chip) => {
   chip.addEventListener("click", () => handleDemoChipClick(chip));
 });
+els.whyOutfitBtn.addEventListener("click", handleWhyOutfit);
